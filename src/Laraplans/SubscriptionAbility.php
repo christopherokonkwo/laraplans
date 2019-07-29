@@ -2,8 +2,6 @@
 
 namespace Gerardojbaez\Laraplans;
 
-use Gerardojbaez\Laraplans\Feature;
-
 class SubscriptionAbility
 {
     /**
@@ -59,7 +57,7 @@ class SubscriptionAbility
     /**
      * Get how many times the feature has been used.
      *
-     * @param  string $feature
+     * @param string $feature
      *
      * @return int
      */
@@ -77,7 +75,7 @@ class SubscriptionAbility
     /**
      * Get the available uses.
      *
-     * @param  string $feature
+     * @param string $feature
      *
      * @return int
      */
@@ -113,8 +111,8 @@ class SubscriptionAbility
     /**
      * Get feature value.
      *
-     * @param  string $feature
-     * @param  mixed $default
+     * @param string $feature
+     * @param mixed $default
      *
      * @return mixed
      */
@@ -138,12 +136,31 @@ class SubscriptionAbility
      */
     public function getFeatureAbilityDetails($feature)
     {
-        $ability               = [];
-        $ability['canUse']     = $this->canUse($feature);
-        $ability['value']      = $this->value($feature);
-        $ability['remaining'] = ($ability['value'] == 'unlimited') ? 'unlimited' : $this->remainings($feature);
-        $ability['consumed']   = $this->consumed($feature);
+        $ability                = [];
+        $ability['canUse']      = $this->canUse($feature);
+        $ability['value']       = $this->value($feature);
+        $ability['remaining']   = ($ability['value'] == 'unlimited') ? 'unlimited' : $this->remainings($feature);
+        $ability['consumed']    = $this->consumed($feature);
+        $ability['valid_until'] = $this->getTime($feature);
 
         return $ability;
+    }
+
+    /**
+     * Get expiry time
+     *
+     * @param $feature
+     *
+     * @return int|string
+     */
+    public function getTime($feature)
+    {
+        foreach ($this->subscription->usage as $key => $usage) {
+            if ($feature === $usage->code) {
+                return (string)$usage->valid_until;
+            }
+        }
+
+        return 0;
     }
 }
