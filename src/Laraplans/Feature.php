@@ -3,7 +3,6 @@
 namespace Gerardojbaez\Laraplans;
 
 use Carbon\Carbon;
-use Gerardojbaez\Laraplans\Period;
 use Gerardojbaez\Laraplans\Exceptions\InvalidPlanFeatureException;
 
 class Feature
@@ -33,19 +32,20 @@ class Feature
      * Create a new Feature instance.
      *
      * @param string $feature_code
-     * @throws  \Gerardojbaez\Laraplans\Exceptions\InvalidPlanFeatureException
+     *
      * @return void
+     * @throws  \Gerardojbaez\Laraplans\Exceptions\InvalidPlanFeatureException
      */
     public function __construct($feature_code)
     {
 
-        if (!self::isValid($feature_code)) {
+        if ( ! self::isValid($feature_code)) {
             throw new InvalidPlanFeatureException($feature_code);
         }
 
         $this->feature_code = $feature_code;
 
-        $feature = config('laraplans.features.'.$feature_code);
+        $feature = config('laraplans.features.' . $feature_code);
 
         if (is_array($feature)) {
             foreach ($feature as $key => $value) {
@@ -65,7 +65,7 @@ class Feature
     {
         $features = config('laraplans.features');
 
-        if (!$features) {
+        if ( ! $features) {
             return [];
         }
 
@@ -86,6 +86,7 @@ class Feature
      * Check if feature code is valid.
      *
      * @param string $code
+     *
      * @return bool
      */
     public static function isValid($code)
@@ -137,6 +138,7 @@ class Feature
      * Set resettable interval.
      *
      * @param string
+     *
      * @return void
      */
     public function setResettableInterval($interval)
@@ -148,6 +150,7 @@ class Feature
      * Set resettable count.
      *
      * @param int
+     *
      * @return void
      */
     public function setResettableCount($count)
@@ -169,6 +172,7 @@ class Feature
      * Get feature's reset date.
      *
      * @param string $dateFrom
+     *
      * @return \Carbon\Carbon
      */
     public function getResetDate($dateFrom = '')
@@ -184,6 +188,7 @@ class Feature
 
     /**
      * Calculate new valid date for subscription usage
+     *
      * @param $valid_until
      *
      * @return static
@@ -210,11 +215,22 @@ class Feature
         $cMinute = $currentDate->minute;
         $cSecond = $currentDate->second;
 
+        $v = $vHour * 60 + $vMinute;
+        $c = $cHour * 60 + $cMinute;
 
-        if ($vHour * 60 + $vMinute > $cHour * 60 + $cMinute) {
-            $newValidDate = Carbon::create($cYear, $cMonth, $cDay, $vHour, $vMinute, $vSecond);
-        } else {
-            $newValidDate = Carbon::create($cYear, $cMonth, $cDay + 1, $vHour, $vMinute, $vSecond);
+        if ($this->resettable_count == 1) {
+            if ($v > $c) {
+                $newValidDate = Carbon::create($cYear, $cMonth, $cDay, $vHour, $vMinute, $vSecond);
+            } else {
+                $newValidDate = Carbon::create($cYear, $cMonth, $cDay + 1, $vHour, $vMinute, $vSecond);
+            }
+        }
+
+        if ($this->resettable_count != 1) {
+            while ($valid_until < $currentDate) {
+                $valid_until = $valid_until->addDays($this->resettable_count);
+            }
+            $newValidDate = $valid_until;
         }
 
         return $newValidDate;
