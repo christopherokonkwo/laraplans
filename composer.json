@@ -29,5 +29,12 @@
             "Gerardojbaez\\Laraplans\\Tests\\": "tests/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gerardojbaez\\Laraplans\\LaraplansServiceProvider"
+            ]
+        }
+    }
 }
